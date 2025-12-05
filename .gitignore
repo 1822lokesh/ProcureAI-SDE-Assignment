@@ -1,0 +1,14 @@
+# .gitignore
+
+# 1. Security: Never upload API keys or Passwords
+.env
+
+# 2. Python Junk
+venv/
+__pycache__/
+*.pyc
+
+# 3. Node Modules (Frontend Junk)
+node_modules/
+dist/
+.DS_Store
