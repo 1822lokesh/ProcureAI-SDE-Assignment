@@ -144,13 +144,21 @@ async def upload_proposal(rfp_id: str, file: UploadFile = File(...), db: Session
         print(f"DEBUG: AI Error: {e}")
         ai_extracted_data = {} # Fail gracefully
     
-    # 4. Save to Database
+    # --- 4. NEW: AI Scoring (The Judge) ---
+    print("AI Judging Proposal...")
+    evaluation = ai_service.evaluate_proposal(rfp.prompt_text, ai_extracted_data)
+    
+    # We save the reason inside the extracted data so the frontend can see it
+    ai_extracted_data["ai_recommendation"] = evaluation.get("reason", "No reason provided")
+
+
+    # 5. Save to Database
     new_proposal = models.Proposal(
         rfp_id=rfp_id,
         vendor_id=None, 
         raw_response_text=extracted_text[:5000], # Store first 5000 chars only
         extracted_data=ai_extracted_data,
-        fit_score=0 
+        fit_score=evaluation.get("score", 0)
     )
     db.add(new_proposal)
     db.commit()

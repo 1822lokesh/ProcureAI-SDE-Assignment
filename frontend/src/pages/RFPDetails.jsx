@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-// Ensure getVendors and sendRFPEmails are imported from api.js
 import {
   getRFP,
   getProposals,
@@ -29,17 +28,17 @@ import {
   FormGroup,
   FormControlLabel,
   Checkbox,
+  Tooltip,
 } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import SendIcon from "@mui/icons-material/Send"; // <--- THIS ICON IS REQUIRED
+import SendIcon from "@mui/icons-material/Send";
+import EmojiEventsIcon from "@mui/icons-material/EmojiEvents"; // Trophy Icon
 
 function RFPDetails() {
   const { id } = useParams();
   const [rfp, setRfp] = useState(null);
   const [proposals, setProposals] = useState([]);
   const [vendors, setVendors] = useState([]);
-
-  // UI States
   const [uploading, setUploading] = useState(false);
   const [sending, setSending] = useState(false);
   const [openEmailDialog, setOpenEmailDialog] = useState(false);
@@ -47,38 +46,34 @@ function RFPDetails() {
   const [error, setError] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
 
-  useEffect(() => {
-    const loadInitialData = async () => {
-      try {
-        const rfpData = await getRFP(id);
-        setRfp(rfpData);
-        const proposalsData = await getProposals(id);
-        setProposals(proposalsData);
-
-        // Load Vendors for the popup
-        try {
-          const vendorList = await getVendors();
-          setVendors(vendorList);
-        } catch (e) {
-          console.error("Vendor fetch error", e);
-        }
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    loadInitialData();
-  }, [id]);
-
-  const refreshProposals = async () => {
+  // --- Data Loading ---
+  const loadData = async () => {
     try {
-      const data = await getProposals(id);
-      setProposals(data);
+      const rfpData = await getRFP(id);
+      setRfp(rfpData);
+      const proposalsData = await getProposals(id);
+      // Sort proposals by score (Highest first)
+      const sortedProposals = proposalsData.sort(
+        (a, b) => b.fit_score - a.fit_score
+      );
+      setProposals(sortedProposals);
+
+      try {
+        const vendorList = await getVendors();
+        setVendors(vendorList);
+      } catch (e) {
+        console.error("Vendor fetch error", e);
+      }
     } catch (err) {
       console.error(err);
     }
   };
 
-  // --- PDF UPLOAD LOGIC ---
+  useEffect(() => {
+    loadData();
+  }, [id]);
+
+  // --- Handlers ---
   const handleFileUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -86,21 +81,12 @@ function RFPDetails() {
     setError(null);
     try {
       await uploadProposal(id, file);
-      await refreshProposals();
+      await loadData(); // Reload to see new score
     } catch (err) {
-      console.error("Upload Error:", err);
-      setError("Failed to upload/analyze PDF.");
+      console.error(err);
+      setError("Failed to analyze PDF.");
     } finally {
       setUploading(false);
-    }
-  };
-
-  // --- EMAIL LOGIC ---
-  const handleVendorToggle = (email) => {
-    if (selectedVendors.includes(email)) {
-      setSelectedVendors(selectedVendors.filter((e) => e !== email));
-    } else {
-      setSelectedVendors([...selectedVendors, email]);
     }
   };
 
@@ -113,10 +99,17 @@ function RFPDetails() {
       setOpenEmailDialog(false);
       setSelectedVendors([]);
     } catch (err) {
-      console.error("Email Error:", err);
-      setError("Failed to send emails. Check backend.");
+      setError("Failed to send emails.", err);
     } finally {
       setSending(false);
+    }
+  };
+
+  const handleVendorToggle = (email) => {
+    if (selectedVendors.includes(email)) {
+      setSelectedVendors(selectedVendors.filter((e) => e !== email));
+    } else {
+      setSelectedVendors([...selectedVendors, email]);
     }
   };
 
@@ -129,9 +122,15 @@ function RFPDetails() {
 
   const dynamicFields = rfp.json_schema?.fields || [];
 
+  // Helper to get color based on score
+  const getScoreColor = (score) => {
+    if (score >= 80) return "success"; // Green
+    if (score >= 50) return "warning"; // Orange
+    return "error"; // Red
+  };
+
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
-      {/* Header Section */}
       <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
         <div
           style={{
@@ -148,8 +147,6 @@ function RFPDetails() {
               <b>Prompt:</b> {rfp.prompt_text}
             </Typography>
           </div>
-
-          {/* --- THE BUTTON SHOULD BE HERE --- */}
           <Button
             variant="outlined"
             startIcon={<SendIcon />}
@@ -157,7 +154,6 @@ function RFPDetails() {
           >
             Invite Vendors
           </Button>
-          {/* --------------------------------- */}
         </div>
 
         <div
@@ -180,7 +176,7 @@ function RFPDetails() {
             }
             disabled={uploading}
           >
-            {uploading ? "Analyzing with AI..." : "Upload Vendor PDF"}
+            {uploading ? "Analyzing & Scoring..." : "Upload Vendor PDF"}
             <input
               type="file"
               hidden
@@ -193,7 +189,6 @@ function RFPDetails() {
         </div>
       </Paper>
 
-      {/* Comparison Matrix */}
       <Typography variant="h5" gutterBottom>
         Comparison Matrix
       </Typography>
@@ -202,7 +197,7 @@ function RFPDetails() {
           <TableHead sx={{ bgcolor: "#f5f5f5" }}>
             <TableRow>
               <TableCell>
-                <b>Vendor / File</b>
+                <b>Vendor</b>
               </TableCell>
               {dynamicFields.map((field) => (
                 <TableCell key={field.key}>
@@ -210,23 +205,58 @@ function RFPDetails() {
                 </TableCell>
               ))}
               <TableCell>
-                <b>AI Score</b>
+                <b>AI Score & Recommendation</b>
               </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {proposals.map((proposal) => (
-              <TableRow key={proposal.id}>
+            {proposals.map((proposal, index) => (
+              <TableRow
+                key={proposal.id}
+                sx={
+                  index === 0 && proposal.fit_score > 80
+                    ? { bgcolor: "#f0fdf4" }
+                    : {}
+                } // Highlight Winner
+              >
                 <TableCell>
-                  {proposal.extracted_data?.vendor_name || "Unknown Vendor"}
+                  {proposal.extracted_data?.vendor_name || "Unknown"}
+                  {index === 0 && proposal.fit_score > 0 && (
+                    <Chip
+                      icon={<EmojiEventsIcon />}
+                      label="Top Pick"
+                      size="small"
+                      color="success"
+                      sx={{ ml: 1 }}
+                    />
+                  )}
                 </TableCell>
+
                 {dynamicFields.map((field) => (
                   <TableCell key={field.key}>
                     {proposal.extracted_data?.[field.key]?.toString() || "-"}
                   </TableCell>
                 ))}
+
                 <TableCell>
-                  <Chip label="N/A" size="small" />
+                  <Tooltip
+                    title={
+                      proposal.extracted_data?.ai_recommendation || "No reason"
+                    }
+                  >
+                    <Chip
+                      label={`${proposal.fit_score}/100`}
+                      color={getScoreColor(proposal.fit_score)}
+                      variant={index === 0 ? "filled" : "outlined"}
+                    />
+                  </Tooltip>
+                  <Typography
+                    variant="caption"
+                    display="block"
+                    color="text.secondary"
+                  >
+                    Hover for reason
+                  </Typography>
                 </TableCell>
               </TableRow>
             ))}
@@ -234,14 +264,12 @@ function RFPDetails() {
         </Table>
       </TableContainer>
 
-      {/* --- Email Dialog Popup --- */}
+      {/* Email Dialog */}
       <Dialog open={openEmailDialog} onClose={() => setOpenEmailDialog(false)}>
-        <DialogTitle>Select Vendors to Invite</DialogTitle>
+        <DialogTitle>Select Vendors</DialogTitle>
         <DialogContent sx={{ minWidth: "300px" }}>
           {vendors.length === 0 ? (
-            <Typography>
-              No vendors found. Please add vendors via API first.
-            </Typography>
+            <Typography>No vendors found.</Typography>
           ) : (
             <FormGroup>
               {vendors.map((vendor) => (

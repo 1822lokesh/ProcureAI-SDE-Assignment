@@ -88,3 +88,36 @@ def extract_data_from_text(pdf_text: str, json_schema: dict):
     except Exception as e:
         print(f"AI Extraction Error: {e}")
         return {"error": "Failed to extract data"}
+    
+def evaluate_proposal(user_request: str, vendor_data: dict):
+    """
+    Step 3: The Judge.
+    Compares the User's Request (RFP) vs Vendor's Offer (Data).
+    Returns a Score (0-100) and a short Reason.
+    """
+    system_instruction = """
+    You are a procurement procurement officer. 
+    Compare the "User Request" against the "Vendor Offer".
+    
+    Task:
+    1. Assign a "fit_score" from 0 to 100.
+       - 100 = Perfect match (Price is good, specs match, warranty matches).
+       - 0 = Complete mismatch.
+    2. Provide a "recommendation" (1 short sentence explaining the score).
+    
+    Return JSON ONLY:
+    {
+        "score": 85,
+        "reason": "Price is slightly over budget, but warranty is excellent."
+    }
+    """
+    
+    try:
+        response = model.generate_content(
+            f"{system_instruction}\n\nUSER REQUEST: {user_request}\nVENDOR OFFER: {json.dumps(vendor_data)}",
+            generation_config={"response_mime_type": "application/json"}
+        )
+        return json.loads(clean_json_string(response.text))
+    except Exception as e:
+        print(f"Scoring Error: {e}")
+        return {"score": 0, "reason": "AI could not evaluate."}
