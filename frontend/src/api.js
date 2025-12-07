@@ -1,12 +1,13 @@
 import axios from 'axios';
 
-// Point to your FastAPI backend
-const API_URL = 'http://127.0.0.1:8000';
+// Ensure this matches your Backend URL exactly
+const API_URL = 'http://127.0.0.1:8000'; 
 
 const api = axios.create({
     baseURL: API_URL,
 });
 
+// --- RFP Functions ---
 export const getRFPs = async () => {
     const response = await api.get('/rfps/');
     return response.data;
@@ -27,6 +28,7 @@ export const createRFP = async (prompt_text) => {
     return response.data;
 };
 
+// --- Proposal Functions ---
 export const getProposals = async (rfpId) => {
     const response = await api.get(`/rfps/${rfpId}/proposals/`);
     return response.data;
@@ -39,6 +41,19 @@ export const uploadProposal = async (rfpId, file) => {
         headers: {
             'Content-Type': 'multipart/form-data',
         },
+    });
+    return response.data;
+};
+
+// --- Vendor & Email Functions (These were missing!) ---
+export const getVendors = async () => {
+    const response = await api.get('/vendors/');
+    return response.data;
+};
+
+export const sendRFPEmails = async (rfpId, vendorEmails) => {
+    const response = await api.post(`/rfps/${rfpId}/send/`, {
+        vendor_emails: vendorEmails
     });
     return response.data;
 };

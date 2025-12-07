@@ -1,7 +1,9 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Dashboard from './pages/Dashboard';
-import { CssBaseline, AppBar, Toolbar, Typography } from '@mui/material';
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Dashboard from "./pages/Dashboard";
+import { CssBaseline, AppBar, Toolbar, Typography } from "@mui/material";
+import RFPDetails from "./pages/RFPDetails";
+import CreateRFP from "./pages/CreateRFP";
 
 function App() {
   return (
@@ -12,11 +14,12 @@ function App() {
           <Typography variant="h6">ProcureAI 🤖</Typography>
         </Toolbar>
       </AppBar>
-      
+
       <Routes>
         <Route path="/" element={<Dashboard />} />
-        <Route path="/create" element={<div>Create Page Coming Soon</div>} />
-        <Route path="/rfp/:id" element={<div>Details Page Coming Soon</div>} />
+        <Route path="/create" element={<CreateRFP />} />
+
+        <Route path="/rfp/:id" element={<RFPDetails />} />
       </Routes>
     </Router>
   );
