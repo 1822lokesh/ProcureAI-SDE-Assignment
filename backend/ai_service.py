@@ -1,3 +1,10 @@
+"""
+AI Service Module
+-----------------
+This module handles all interactions with the Google Gemini API.
+It includes the specific logic to force the AI to find the Vendor Name.
+"""
+
 import google.generativeai as genai
 import os
 import json
@@ -10,11 +17,10 @@ api_key = os.getenv("GEMINI_API_KEY")
 if not api_key:
     raise ValueError("GEMINI_API_KEY not found in .env file")
 
-# 2. Configure Gemini with the key
+# 2. Configure the AI Client
 genai.configure(api_key=api_key)
 
 # 3. Initialize the Model
-# 'gemini-1.5-flash' is the best balance of speed and free tier limits
 model = genai.GenerativeModel('gemini-2.5-flash')
 
 def clean_json_string(text: str):
@@ -75,8 +81,14 @@ def extract_data_from_text(pdf_text: str, json_schema: dict):
     3. Return ONLY a valid JSON object.
     4. If a field is missing in the text, set the value to null.
     5. Normalize all currency values to numbers (e.g., "$10,000" -> 10000).
-    """
     
+    Example Output format:
+    {{
+        "vendor_name": "Dell Inc"
+        "price": 1000,
+        ... other schema fields ...
+    }}
+    """
     try:
         response = model.generate_content(
             f"{system_instruction}\n\nSOURCE TEXT:\n{pdf_text}",
