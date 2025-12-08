@@ -3,7 +3,7 @@
 ProcureAI is a **full-stack, AI-powered procurement dashboard**.  
 It streamlines the RFP lifecycle by using LLMs to:
 
-- Automatically generate data schemas from natural language requests
+- Automatically generate data schemas from natural language requests  
 - Extract structured data from unstructured vendor PDF proposals
 
 ---
@@ -12,11 +12,11 @@ It streamlines the RFP lifecycle by using LLMs to:
 
 ### Prerequisites
 
-- Node.js (v18 or higher)
-- Python (v3.10 or higher)
-- PostgreSQL Database URL (e.g., Neon.tech or Supabase)
-- Google Gemini API Key (Free tier via Google AI Studio)
-- Ethereal Email Account (For testing SMTP)
+- Node.js (v18 or higher)  
+- Python (v3.10 or higher)  
+- PostgreSQL Database URL (e.g., Neon.tech or Supabase)  
+- Google Gemini API Key (Free tier via Google AI Studio)  
+- Ethereal Email Account (For testing SMTP)  
 
 ---
 
@@ -31,9 +31,8 @@ python -m venv venv
 # Windows: venv\Scripts\activate
 # Mac/Linux: source venv/bin/activate
 pip install -r requirements.txt
-```
-
 ````
+---
 
 ### Frontend
 
@@ -165,11 +164,11 @@ python seed_data.py
 
 ### Key Design Decisions
 
-- **Hybrid Database Schema:**
+- **Hybrid Database Schema:**  
   Instead of creating a new SQL table for every RFP type (which is impractical), a JSONB column (`extracted_data`) is used. This allows storing diverse fields like _Screen Size_ for monitors or _Catering Menu_ for events in the same table without migrations.
-- **Schema-Guided Extraction:**
+- **Schema-Guided Extraction:**  
   The LLM is guided by the specific JSON Schema generated during creation, ensuring strictly structured outputs that align with frontend table columns.
-- **Scoring Logic:**
+- **Scoring Logic:**  
   The AI acts as a "Judge," comparing semantic meaning of the User Request vs. Vendor Proposal to assign a **0–100 Fit Score**.
 
 ### Assumptions
@@ -196,7 +195,7 @@ python seed_data.py
 3. **Advanced Prompt Engineering**
 
    - **Challenge:** Getting AI to reliably output clean JSON without markdown formatting.
-   - **Solution:** Iterated on system prompts with strict instructions:
+   - **Solution:** Iterated on system prompts with strict instructions:  
      _"You are a data extraction engine... Normalize all numbers... Return JSON ONLY."_
 
 4. **Learning Outcome**
@@ -204,5 +203,3 @@ python seed_data.py
 
 ```
 
-```
-````
