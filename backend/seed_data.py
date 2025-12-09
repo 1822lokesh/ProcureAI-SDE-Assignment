@@ -7,19 +7,24 @@ url = "http://127.0.0.1:8000/vendors/"
 # The 3 Vendors you want to create
 vendors = [
     {
-        "name": "TechGiant Solutions", 
-        "email": "sales@techgiant.com", 
-        "contact_person": "Tom Tech"
+        "name": "NetConnect Pro", 
+        "email": "sales@netconnect.com", 
+        "contact_person": "Vendor A"
     },
     {
-        "name": "BestScreens Inc.", 
-        "email": "b2b@bestscreens.com", 
-        "contact_person": "Sarah Screen"
+        "name": "BudgetLink Systems", 
+        "email": "info@budgetlink.com", 
+        "contact_person": "Vendor B"
     },
     {
-        "name": "BudgetDepot Wholesale", 
-        "email": "info@budgetdepot.com", 
-        "contact_person": "Bob Budget"
+        "name": "CoreTech Enterprise", 
+        "email": "bids@coretech.com", 
+        "contact_person": "Vendor C"
+    },
+    {
+        "name": "RefurbDepot", 
+        "email": "sales@refurbdepot.com", 
+        "contact_person": "Vendor D"
     }
 ]
 
